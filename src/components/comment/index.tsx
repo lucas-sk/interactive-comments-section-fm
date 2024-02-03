@@ -1,35 +1,42 @@
-import { useState } from "react";
-import minusIconSrc from "../../images/icon-minus.svg";
-import plusIconSrc from "../../images/icon-plus.svg";
+import { Minus } from "../icons/Minus";
+import { Plus } from "../icons/Plus";
+import { Reply } from "../icons/Reply";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
-import { Card } from "../ui/card";
-import { Input } from "../ui/input";
+import { Card, CardContent, CardFooter, CardHeader } from "../ui/card";
 
 export function Comment(){
-    const [count, setCount] = useState(0)
-
-    function handleMinusCount(){
-      setCount((state) => state - 1)
-    }
-
-    function handlePlusCount(){
-      setCount((state) => state + 1)
-    }
-
     return (
-        <Card >
-          <div>
+      <Card>
+          <CardHeader className="flex flex-row items-center gap-2">
+            <Avatar className="h-6 w-6">
+              <AvatarImage src="./src/images/avatars/image-amyrobson.webp" alt="avatar"/>
+              <AvatarFallback>A</AvatarFallback>
+            </Avatar>
+            <h2 className="text-lg text-charcoal font-semibold">amyrobson</h2>
+            <p className="text-sm text-payne">2 weeks ago</p>
+          </CardHeader>
+          <CardContent>
+            <p className="text-payne">
+              Impressive! Though it seems the drag feature could be improved. But overall it looks incredible. You've nailed the design and the responsiveness at various breakpoints works really well.
+            </p>
+          </CardContent>
 
-          </div>
-          <div>
-            <Button size={"icon"} onClick={handlePlusCount} >
-              <img src={plusIconSrc} alt="plus" />
-            </Button>
-            <Input type="number" value={count}/>
-            <Button size={"icon"} onClick={handleMinusCount}>
-              <img src={minusIconSrc} alt="minus" />
-            </Button>
+          <CardFooter className="flex justify-between items-center">
+            <div className="flex items-center bg-flash-500 rounded-md">
+              <Button className="text-periwinkle hover:text-iris" size={"icon"} variant={"outline"}>
+                <Plus />
+              </Button>
+              <span className="text-iris">12</span>
+              <Button className="text-periwinkle hover:text-iris" size={"icon"} variant={"outline"}>
+                <Minus />
+              </Button>
             </div>
-        </Card>
+            <Button className="gap-2" size={"sm"} variant={"outline"}>
+              <Reply />
+              Reply
+            </Button>
+          </CardFooter>
+      </Card>
   )
 }
