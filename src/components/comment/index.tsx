@@ -1,5 +1,4 @@
-import { Minus } from "../icons/Minus";
-import { Plus } from "../icons/Plus";
+import { Count } from "../count";
 import { Reply } from "../icons/Reply";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
@@ -23,15 +22,7 @@ export function Comment(){
           </CardContent>
 
           <CardFooter className="flex justify-between items-center">
-            <div className="flex items-center bg-flash-500 rounded-md">
-              <Button className="text-periwinkle hover:text-iris" size={"icon"} variant={"outline"}>
-                <Plus />
-              </Button>
-              <span className="text-iris">12</span>
-              <Button className="text-periwinkle hover:text-iris" size={"icon"} variant={"outline"}>
-                <Minus />
-              </Button>
-            </div>
+            <Count stateInitial={12}/>
             <Button className="gap-2" size={"sm"} variant={"outline"}>
               <Reply />
               Reply
