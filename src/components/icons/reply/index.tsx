@@ -1,7 +1,6 @@
-
 interface ReplyProps extends React.SVGProps<SVGSVGElement> {}
 
-export function Reply(props: ReplyProps) {
+export function ReplyIcon(props: ReplyProps) {
   return (
     <svg width={14} height={13} xmlns="http://www.w3.org/2000/svg" {...props}>
       <path

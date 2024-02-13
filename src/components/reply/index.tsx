@@ -1,17 +1,15 @@
-import { IReply, useComments } from '@/hooks/useComments'
+import { useComments } from '@/hooks/useComments'
 import { useUser } from '@/hooks/useUser'
 import { formatDistanceToNow } from 'date-fns'
 import { ChangeEvent, useState } from 'react'
 import { useMedia } from 'react-use'
 import { toast } from 'sonner'
-
 import { Count } from '../count'
 import { FormAddNewReply } from '../formAddNewReply'
 import { Delete } from '../icons/delete'
 import { Edit } from '../icons/edit'
 import { Person } from '../icons/person'
 import { ReplyIcon } from '../icons/reply'
-import { Reply } from '../reply'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,118 +25,90 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
 import { Card, CardContent, CardFooter, CardHeader } from '../ui/card'
-import { Separator } from '../ui/separator'
 import { Textarea } from '../ui/textarea'
 
-interface CommentProps {
+interface ReplyProps {
   id: string
   content: string
   createdAt: string
   score: number
+  commentId: string
   userComment: {
     username: string
     avatarUrl: string
   }
-  replies: IReply[]
-  // onRemoveComment: (id: string) => void
-  // onUpdateComment: ({ id, content }: { id: string; content: string }) => void
-  // onAddReplyInComment: ({
-  //   commentId,
-  //   content,
-  // }: {
-  //   commentId: string
-  //   replyingTo: string
-  //   content: string
-  // }) => void
-  // onRemoveReply: ({
-  //   replyId,
-  //   commentId,
-  // }: {
-  //   replyId: string
-  //   commentId: string
-  // }) => void
-  // onUpdateReply: ({
-  //   replyId,
-  //   commentId,
-  //   content,
-  // }: {
-  //   replyId: string
-  //   content: string
-  //   commentId: string
-  // }) => void
+  replyingTo: string
 }
 
-export function Comment({
+export function Reply({
   id,
-  content,
-  createdAt,
   score,
-  replies,
+  content,
+  commentId,
+  replyingTo,
+  createdAt,
   userComment,
-  // onRemoveComment,
-  // onUpdateComment,
-}: CommentProps) {
+}: ReplyProps) {
   const { user } = useUser()
-  const { removeComment, updateComment, addReply } = useComments()
-  const [shouldShowEditorComment, setShouldShowEditorComment] = useState(false)
+  const { removeReply, updateReply, addReply } = useComments()
+  const [shouldShowEditor, setShouldShowEditor] = useState(false)
   const [shouldShowEditorReply, setShouldShowEditorReply] = useState(false)
   const isCommentUserEqualCurrentUser = user?.username === userComment?.username
   const [reply, setReply] = useState(content)
 
-  function handleDeleteComment() {
-    removeComment(id)
+  function handleDeleteReply() {
+    removeReply({
+      replyId: id,
+      commentId,
+    })
   }
 
   function handleEditComment() {
-    setShouldShowEditorComment((state) => !state)
+    setShouldShowEditor((state) => !state)
   }
 
-  function handleToggleEditorReply() {
-    setShouldShowEditorReply((state) => !state)
+  function handleCancelUpdateReply() {
+    setShouldShowEditor(false)
+  }
+
+  function handleUpdateReply() {
+    if (reply.trim() === '') {
+      toast.error('it is not possible to send empty replies')
+      return
+    }
+
+    updateReply({ replyId: id, content: reply, commentId })
+    setShouldShowEditor(false)
   }
 
   function handleReplyComment(e: ChangeEvent<HTMLTextAreaElement>) {
     setReply(() => e.target.value)
   }
 
-  function handleUpdateComment() {
-    if (reply.trim() === '') {
-      toast.error('it is not possible to send empty comments')
-    }
-
-    updateComment({
-      commentId: id,
-      comment: reply,
-    })
-    setShouldShowEditorComment(false)
+  function handleToggleEditorReply() {
+    setShouldShowEditorReply((state) => !state)
   }
 
-  function handleCancelUpdateComment() {
-    setShouldShowEditorComment(false)
-  }
-
-  function onAddReply(content: string) {
+  function handleAddReply(content: string) {
     if (!user) {
       return
     }
-
     addReply({
       content,
       replyingTo: userComment.username,
-      commentId: id,
+      commentId,
       user: {
         username: user.username,
         avatarUrl: user.avatarUrl,
       },
     })
-
     setShouldShowEditorReply(() => false)
   }
 
   const isMediaMedium = useMedia('(min-width: 768px)')
 
   return (
-    <>
+    <div className="space-y-4">
       <Card
         className="mb-4 grid grid-cols-3 grid-rows-3 p-6 md:grid-rows-2 gap-6"
         style={{
@@ -150,13 +120,13 @@ export function Comment({
       >
         <CardHeader className="flex flex-row items-baseline gap-2  col-span-3 md:col-start-2 row-start-1">
           <Avatar className="h-6 w-6 self-end">
-            <AvatarImage src={userComment.avatarUrl} alt="avatar" />
+            <AvatarImage src={userComment?.avatarUrl} alt="avatar" />
             <AvatarFallback>
               <Person />
             </AvatarFallback>
           </Avatar>
           <h2 className="text-lg text-charcoal font-semibold">
-            {userComment.username}
+            {userComment?.username}
           </h2>
           {isCommentUserEqualCurrentUser && <Badge>You</Badge>}
           <p className="text-xs text-payne">
@@ -164,7 +134,7 @@ export function Comment({
           </p>
         </CardHeader>
         <CardContent className="col-span-3 row-start-2 md:col-span-2 md:row-span-2 md:col-start-2 md:row-start-2">
-          {shouldShowEditorComment && (
+          {shouldShowEditor && (
             <Textarea
               value={reply}
               onChange={handleReplyComment}
@@ -176,8 +146,11 @@ export function Comment({
               }}
             />
           )}
-          {!shouldShowEditorComment && (
+          {!shouldShowEditor && (
             <p className="text-payne">
+              {replyingTo && (
+                <span className="text-iris font-bold">@{replyingTo}</span>
+              )}
               {content.split(' ').map((word, index) => {
                 if (word.startsWith('@')) {
                   return (
@@ -187,7 +160,7 @@ export function Comment({
                     </span>
                   )
                 }
-                return word + ' '
+                return ' ' + word + ' '
               })}
             </p>
           )}
@@ -211,13 +184,13 @@ export function Comment({
           )}
           {isCommentUserEqualCurrentUser && (
             <>
-              {shouldShowEditorComment && (
+              {shouldShowEditor && (
                 <div className="flex gap-2">
                   <Button
                     className="gap-2"
                     size={'sm'}
                     variant={'secondary'}
-                    onClick={handleCancelUpdateComment}
+                    onClick={handleCancelUpdateReply}
                   >
                     Cancel
                   </Button>
@@ -225,13 +198,13 @@ export function Comment({
                     className="gap-2"
                     size={'sm'}
                     variant={'default'}
-                    onClick={handleUpdateComment}
+                    onClick={handleUpdateReply}
                   >
                     Update
                   </Button>
                 </div>
               )}
-              {!shouldShowEditorComment && (
+              {!shouldShowEditor && (
                 <div className="flex">
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
@@ -249,17 +222,14 @@ export function Comment({
                         <AlertDialogTitle>Delete comment</AlertDialogTitle>
                         <AlertDialogDescription>
                           Are you sure you want to delete this comment? This
-                          will remove the comment and can&apost be undone.
+                          will remove the comment and can&apos;t be undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel asChild>
                           <Button variant={'secondary'}>No, cancel</Button>
                         </AlertDialogCancel>
-                        <AlertDialogAction
-                          asChild
-                          onClick={handleDeleteComment}
-                        >
+                        <AlertDialogAction asChild onClick={handleDeleteReply}>
                           <Button variant={'destructive'}>Yes, DELETE</Button>
                         </AlertDialogAction>
                       </AlertDialogFooter>
@@ -281,34 +251,7 @@ export function Comment({
           )}
         </CardFooter>
       </Card>
-      {shouldShowEditorReply && <FormAddNewReply onAddReply={onAddReply} />}
-      {replies.length > 0 && (
-        <div
-          className="grid grid-cols-2 auto-cols-auto gap-x-6 gap-y-4"
-          style={{
-            gridTemplateColumns: '1px 1fr',
-          }}
-        >
-          <Separator
-            orientation="vertical"
-            className="col-span-1 bg-periwinkle"
-          />
-          <div className="flex-1 flex flex-col gap-4">
-            {replies.map((reply) => (
-              <Reply
-                id={reply.id}
-                key={reply.id}
-                commentId={id}
-                content={reply.content}
-                createdAt={reply.createdAt}
-                replyingTo={reply.replyingTo}
-                score={reply.score}
-                userComment={reply.user}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-    </>
+      {shouldShowEditorReply && <FormAddNewReply onAddReply={handleAddReply} />}
+    </div>
   )
 }
